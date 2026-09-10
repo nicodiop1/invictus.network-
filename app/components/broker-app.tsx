@@ -1,31 +1,23 @@
 "use client";
 
-import { AppHeader } from "./app-header";
-import { GridBackground } from "./grid-background";
 import { ActionsPanel } from "./actions/actions-panel";
 
 export function BrokerApp() {
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
-      <GridBackground />
-      <div className="relative z-10">
-        <AppHeader />
-        <main className="mx-auto max-w-5xl px-6 pb-16 pt-14">
-          <section className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-muted">
-              One network. One asset. One command surface.
-            </p>
-            <h1 className="mt-4 text-5xl font-black tracking-[-0.04em] sm:text-7xl">
-              Move with <span className="text-muted">conviction.</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-foreground/60">
-              Invictus ONE brings wallet, liquidity, and on-chain actions into one
-              focused terminal. Connect your wallet to begin.
-            </p>
-          </section>
-          <ActionsPanel />
-        </main>
-      </div>
-    </div>
+    <main className="mx-auto max-w-5xl px-6 pb-16 pt-14">
+      <section className="max-w-3xl">
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-muted">
+          One network. One asset. One command surface.
+        </p>
+        <h1 className="mt-4 text-5xl font-black tracking-[-0.04em] sm:text-7xl">
+          Move with <span className="text-muted">conviction.</span>
+        </h1>
+        <p className="mt-5 max-w-xl text-base leading-7 text-foreground/60">
+          Invictus ONE brings wallet, liquidity, and on-chain actions into one
+          focused terminal. Connect your wallet to begin.
+        </p>
+      </section>
+      <ActionsPanel />
+    </main>
   );
 }

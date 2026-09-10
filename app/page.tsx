@@ -1,13 +1,5 @@
-import {
-  ContactSection,
-  HeroSection,
-  HowItWorksSection,
-  NetworkSection,
-  OneSection,
-  SiteFooter,
-  WalletSection,
-} from "./components/site-sections";
+import { BrokerApp } from "./components/broker-app";
 
 export default function Home() {
-  return <main><HeroSection /><NetworkSection /><HowItWorksSection /><OneSection /><WalletSection /><ContactSection /><SiteFooter /></main>;
+  return <BrokerApp />;
 }
