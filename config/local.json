@@ -1,0 +1,10 @@
+{
+  "network_id": "invictus-local",
+  "chain_id": 1337,
+  "p2p_port": 8000,
+  "rpc_port": 8100,
+  "block_reward": 50,
+  "bootstrap_peers": [],
+  "genesis_timestamp": 0,
+  "initial_balances": {}
+}

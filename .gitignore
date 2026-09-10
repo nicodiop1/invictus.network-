@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.env*.local
+.venv/
+.pytest_cache/
+.vscode/
+data/
+tests/

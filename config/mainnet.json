@@ -1,0 +1,10 @@
+{
+  "network_id": "invictus-mainnet-1",
+  "chain_id": 1,
+  "p2p_port": 7000,
+  "rpc_port": 7100,
+  "block_reward": 0,
+  "bootstrap_peers": [],
+  "genesis_timestamp": 0,
+  "initial_balances": {}
+}

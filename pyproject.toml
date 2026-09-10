@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "invictus-network"
+version = "0.1.0"
+description = "The modular core blockchain foundation for Invictus Network"
+requires-python = ">=3.11"
+dependencies = ["cryptography>=42", "pycryptodome>=3.20"]
+
+[project.scripts]
+invictus-node = "invictus.cli:main"
+invictus-demo = "invictus.cli:demo"
+invictus-wallet = "invictus.cli:wallet_command"
+wallet = "invictus.cli:wallet_command"
+invictus-genesis = "invictus.cli:genesis_command"
+invictus-send = "invictus.cli:send_command"
+invictus-balance = "invictus.cli:balance_command"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["invictus*"]

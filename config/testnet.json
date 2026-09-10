@@ -1,0 +1,10 @@
+{
+  "network_id": "invictus-testnet-1",
+  "chain_id": 1001,
+  "p2p_port": 9000,
+  "rpc_port": 9100,
+  "block_reward": 50,
+  "bootstrap_peers": [],
+  "genesis_timestamp": 0,
+  "initial_balances": {}
+}

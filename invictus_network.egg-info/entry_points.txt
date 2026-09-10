@@ -1,0 +1,8 @@
+[console_scripts]
+invictus-balance = invictus.cli:balance_command
+invictus-demo = invictus.cli:demo
+invictus-genesis = invictus.cli:genesis_command
+invictus-node = invictus.cli:main
+invictus-send = invictus.cli:send_command
+invictus-wallet = invictus.cli:wallet_command
+wallet = invictus.cli:wallet_command
