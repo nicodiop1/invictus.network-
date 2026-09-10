@@ -2,7 +2,12 @@ node_modules/
 .next/
 .env*.local
 .venv/
+.venv-1/
 .pytest_cache/
 .vscode/
+config/
 data/
 tests/
+*.key
+*.pem
+*.log
