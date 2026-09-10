@@ -77,8 +77,7 @@ class Node:
             writer.close()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-        self.server = Nonenpm i @solana/web3.js @solana/spl-token
-        
+        self.server = None
         self.peer_tasks.clear()
         self.peers.clear()
 
