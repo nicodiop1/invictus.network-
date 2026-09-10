@@ -19,7 +19,7 @@ export default function Home() {
                 className="object-cover"
               />
             </div>
-            <p className="text-[10px] font-light tracking-[0.44em] text-[#d9b563] uppercase">
+            <p className="display-font text-[10px] font-light tracking-[0.44em] text-[#d9b563] uppercase">
               Invictus One
             </p>
           </div>
@@ -31,10 +31,10 @@ export default function Home() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <button className="rounded-full border border-[#d4af5d] bg-[#d4af5d] px-6 py-3 text-[10px] font-medium tracking-[0.26em] text-[#100d09] uppercase transition hover:bg-[#e9c96b]">
+            <button className="display-font rounded-full border border-[#d4af5d] bg-[#d4af5d] px-6 py-3 text-[10px] font-medium tracking-[0.26em] text-[#100d09] uppercase transition hover:bg-[#e9c96b]">
               BUY ONE
             </button>
-            <button className="rounded-full border border-[#d4af5d]/70 bg-transparent px-6 py-3 text-[10px] font-medium tracking-[0.26em] text-[#f3d68a] uppercase transition hover:border-[#e9c96b] hover:text-[#f9e7b0]">
+            <button className="display-font rounded-full border border-[#d4af5d]/70 bg-transparent px-6 py-3 text-[10px] font-medium tracking-[0.26em] text-[#f3d68a] uppercase transition hover:border-[#e9c96b] hover:text-[#f9e7b0]">
               CHART
             </button>
           </div>

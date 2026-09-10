@@ -21,12 +21,12 @@ export function AppHeader() {
             className="object-cover"
           />
         </div>
-        <span className="text-lg font-light tracking-[0.32em] text-[#f3d68a] uppercase">
+        <span className="brand-wordmark text-lg font-light tracking-[0.32em] text-[#f3d68a] uppercase">
           Invictus One
         </span>
       </div>
 
-      <nav className="hidden items-center gap-8 text-[10px] font-light tracking-[0.24em] text-[#f6dca3]/80 md:flex">
+      <nav className="nav-item hidden items-center gap-8 text-[10px] font-light tracking-[0.24em] text-[#f6dca3]/80 md:flex">
         {navItems.map((item) => (
           <a key={item} href="#" className="transition hover:text-[#f3d68a]">
             {item}
