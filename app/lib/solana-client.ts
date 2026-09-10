@@ -14,6 +14,14 @@ export const CLUSTERS: ClusterMoniker[] = [
   "localnet",
 ];
 
+const ENV_NETWORKS: Record<string, ClusterMoniker> = {
+  devnet: "devnet",
+  testnet: "testnet",
+  mainnet: "mainnet",
+  "mainnet-beta": "mainnet",
+  localnet: "localnet",
+};
+
 const CLUSTER_URLS: Record<ClusterMoniker, string> = {
   devnet: "https://api.devnet.solana.com",
   testnet: "https://api.testnet.solana.com",
@@ -41,6 +49,10 @@ export function getClusterUrl(cluster: ClusterMoniker) {
   return CLUSTER_URLS[cluster];
 }
 
+export function getConfiguredCluster(): ClusterMoniker {
+  return ENV_NETWORKS[process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet"] ?? "devnet";
+}
+
 export function getWalletChain(cluster: ClusterMoniker) {
   return WALLET_CHAINS[cluster];
 }
@@ -59,12 +71,16 @@ export function createAppClient(
   cluster: ClusterMoniker,
   urls?: RpcUrlOverrides
 ) {
+  const configuredCluster = cluster === "devnet" ? getConfiguredCluster() : cluster;
+  const rpcUrl = urls?.rpcUrl ?? process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? CLUSTER_URLS[configuredCluster];
+  const rpcSubscriptionsUrl = urls?.rpcSubscriptionsUrl ?? process.env.NEXT_PUBLIC_SOLANA_WS_URL ?? WS_URLS[configuredCluster];
+
   return createClient()
-    .use(walletSigner({ chain: WALLET_CHAINS[cluster] }))
+    .use(walletSigner({ chain: WALLET_CHAINS[configuredCluster] }))
     .use(
       solanaRpc({
-        rpcUrl: urls?.rpcUrl ?? CLUSTER_URLS[cluster],
-        rpcSubscriptionsUrl: urls?.rpcSubscriptionsUrl ?? WS_URLS[cluster],
+        rpcUrl,
+        rpcSubscriptionsUrl,
         transactionConfig: {
           microLamportsPerComputeUnit: 1000n as MicroLamports,
         },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { address, formatDecimalFixedPoint, lamportsToSol } from "@solana/kit";
 import {
   useWallets,
@@ -9,35 +9,58 @@ import {
   useConnectedWallet,
   useWalletStatus,
 } from "@solana/kit-plugin-wallet/react";
+import { toast } from "sonner";
 import { useBalance } from "../lib/hooks/use-balance";
+import { useInvictusWallet } from "../lib/hooks/use-invictus-wallet";
 import { ellipsify } from "../lib/explorer";
-import { useCluster } from "./cluster-context";
 import { useAppClient } from "../lib/client-provider";
 
 const solFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 5,
 });
 
-export function WalletButton() {
+export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const client = useAppClient();
   const wallets = useWallets(client);
   const status = useWalletStatus(client);
   const connected = useConnectedWallet(client);
   const { dispatch: connect, error } = useConnect(client);
   const { dispatch: disconnect } = useDisconnect(client);
+  const invictus = useInvictusWallet();
 
-  const { getExplorerUrl } = useCluster();
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const wasConnected = useRef(false);
 
   const walletAddress = connected?.account.address;
+  const activeAddress = invictus.publicKey ?? walletAddress;
   const balance = useBalance(
-    walletAddress ? address(walletAddress) : undefined
+    activeAddress ? address(activeAddress) : undefined
   );
 
-  const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
+
+  useEffect(() => {
+    if (status === "connecting") toast.loading("Connecting wallet...", { id: "wallet-state" });
+    if (status === "connected" && !wasConnected.current) {
+      toast.success("Wallet connected", { id: "wallet-state" });
+      wasConnected.current = true;
+    }
+    if (status === "disconnected" && wasConnected.current) {
+      toast("Wallet disconnected", { id: "wallet-state" });
+      wasConnected.current = false;
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (error != null) toast.error(error instanceof Error ? error.message : String(error), { id: "wallet-state" });
+  }, [error]);
+
+  useEffect(() => {
+    if (balance.error != null) {
+      toast.error("Unable to load wallet balance", { id: "wallet-balance-state" });
+    }
+  }, [balance.error]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -49,38 +72,64 @@ export function WalletButton() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCopy = async () => {
-    if (!walletAddress) return;
+  const handleInvictusConnect = async () => {
     try {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard API unavailable (insecure origin) or permission denied.
+      await invictus.connect();
+      toast.success("Invictus Wallet connected", { id: "wallet-state" });
+    } catch (connectError) {
+      toast.error(connectError instanceof Error ? connectError.message : String(connectError), { id: "wallet-state" });
     }
   };
 
+  if (invictus.detected) {
+    if (invictus.publicKey) {
+      return (
+        <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
+          <button className="wallet-connected" type="button" onClick={invictus.disconnect}>
+            <span className="status-dot" />
+            <span>{ellipsify(invictus.publicKey, 4)}</span>
+            <span className="wallet-balance" aria-hidden="true">{balance.lamports == null ? "—" : formatDecimalFixedPoint(solFormatter, lamportsToSol(balance.lamports))} SOL</span>
+          </button>
+        </div>
+      );
+    }
+
+    const label = !invictus.exists
+      ? "Create wallet in extension"
+      : invictus.locked
+        ? "Unlock Invictus Wallet"
+        : "Connect Invictus Wallet";
+
+    return (
+      <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
+        <button className="gold-button wallet-trigger" type="button" onClick={handleInvictusConnect}>
+          {label}
+        </button>
+      </div>
+    );
+  }
+
   if (!connected) {
     return (
-      <div className="relative" ref={ref}>
+      <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
         <button
-          onClick={() => (isOpen ? close() : open())}
-          className="cursor-pointer rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90"
+          onClick={() => setIsOpen((value) => !value)}
+          className="gold-button wallet-trigger"
         >
-          Connect Wallet
+            {status === "connecting"
+              ? "Connecting..."
+              : wallets.length === 0
+                ? "Install Invictus Wallet"
+                : "Connect Wallet"}
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-border-low bg-card p-3 shadow-lg">
-            <p className="mb-2 text-xs font-medium text-muted">
-              Choose a wallet
-            </p>
+          <div className="wallet-menu">
+            <p className="eyebrow">SELECT WALLET</p>
             {wallets.length === 0 ? (
-              <p className="text-xs text-muted">
-                No wallets detected. Install a Solana wallet extension.
-              </p>
+              <p className="wallet-empty">No wallet detected. Install Phantom, Solflare, or Backpack, then refresh the page.</p>
             ) : (
-              <div className="space-y-1">
+              <div>
                 {wallets.map((wallet) => (
                   <button
                     key={wallet.name}
@@ -89,14 +138,14 @@ export function WalletButton() {
                       close();
                     }}
                     disabled={status === "connecting"}
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition hover:bg-cream disabled:opacity-50 disabled:pointer-events-none"
+                    className="wallet-option"
                   >
                     {wallet.icon && (
                       // eslint-disable-next-line @next/next/no-img-element -- wallet-standard icons are data URIs
                       <img
                         src={wallet.icon}
                         alt=""
-                        className="h-5 w-5 rounded"
+                        className="wallet-icon-image"
                       />
                     )}
                     <span>{wallet.name}</span>
@@ -105,12 +154,7 @@ export function WalletButton() {
               </div>
             )}
             {status === "connecting" && (
-              <p className="mt-2 text-xs text-muted">Connecting...</p>
-            )}
-            {error != null && (
-              <p className="mt-2 text-xs text-destructive">
-                {error instanceof Error ? error.message : String(error)}
-              </p>
+                <p className="wallet-empty">Connecting...</p>
             )}
           </div>
         )}
@@ -119,60 +163,28 @@ export function WalletButton() {
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
       <button
-        onClick={() => (isOpen ? close() : open())}
-        className="flex cursor-pointer items-center gap-2 rounded-lg border border-border-low bg-card px-3 py-2 text-xs font-medium transition hover:bg-cream"
+        onClick={() => setIsOpen((value) => !value)}
+        className="wallet-connected"
       >
-        <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span className="font-mono">{ellipsify(walletAddress!, 4)}</span>
+        <span className="status-dot" />
+        <span>{ellipsify(walletAddress!, 4)}</span>
+        <span className="wallet-balance" aria-hidden="true">{balance.lamports == null ? "—" : formatDecimalFixedPoint(solFormatter, lamportsToSol(balance.lamports))} SOL</span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-border-low bg-card p-4 shadow-lg">
-          <div className="mb-3">
-            <p className="text-xs text-muted">Balance</p>
-            <p className="text-lg font-bold tabular-nums">
-              {balance.lamports != null
-                ? formatDecimalFixedPoint(
-                    solFormatter,
-                    lamportsToSol(balance.lamports)
-                  )
-                : "—"}{" "}
-              <span className="text-sm font-normal text-muted">SOL</span>
-            </p>
-          </div>
-
-          <div className="mb-3 rounded-lg border border-border-low bg-cream/50 px-3 py-2">
-            <p className="break-all font-mono text-xs">{walletAddress}</p>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleCopy}
-              className="flex-1 cursor-pointer rounded-lg border border-border-low bg-card px-3 py-2 text-xs font-medium transition hover:bg-cream"
-            >
-              {copied ? "Copied!" : "Copy address"}
-            </button>
-            <a
-              href={getExplorerUrl(`/address/${walletAddress}`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 rounded-lg border border-border-low bg-card px-3 py-2 text-center text-xs font-medium transition hover:bg-cream"
-            >
-              Explorer
-            </a>
-          </div>
-
-          <button
-            onClick={() => {
-              disconnect();
-              close();
-            }}
-            className="mt-2 w-full cursor-pointer rounded-lg border border-border-low bg-card px-3 py-2 text-xs font-medium text-destructive transition hover:bg-destructive/10"
-          >
-            Disconnect
-          </button>
+        <div className="wallet-menu wallet-details">
+          <p className="eyebrow">CONNECTED WALLET</p>
+          <p className="wallet-address">{walletAddress}</p>
+          <div className="wallet-stat"><span>Balance</span><strong>
+                {balance.lamports != null
+                  ? formatDecimalFixedPoint(
+                      solFormatter,
+                      lamportsToSol(balance.lamports)
+                    )
+                  : "—"}{" "}SOL</strong></div>
+          <button className="text-button" onClick={() => { disconnect(); close(); }}>DISCONNECT</button>
         </div>
       )}
     </div>
