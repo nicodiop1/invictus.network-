@@ -54,6 +54,12 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
   }, [error]);
 
   useEffect(() => {
+    if (balance.error != null) {
+      toast.error("Unable to load wallet balance", { id: "wallet-balance-state" });
+    }
+  }, [balance.error]);
+
+  useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         close();
@@ -77,7 +83,7 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
           <div className="wallet-menu">
             <p className="eyebrow">SELECT WALLET</p>
             {wallets.length === 0 ? (
-              <p className="wallet-empty">Install Phantom, Solflare, or Backpack to continue.</p>
+              <p className="wallet-empty">No wallet detected. Install Phantom, Solflare, or Backpack, then refresh the page.</p>
             ) : (
               <div>
                 {wallets.map((wallet) => (
