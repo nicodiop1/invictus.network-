@@ -156,16 +156,18 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
         >
             {status === "connecting"
               ? "Connecting..."
-              : wallets.length === 0
-                ? "Install Invictus Wallet"
-                : "Connect Wallet"}
+              : "Connect Wallet"}
         </button>
 
         {isOpen && (
           <div className="wallet-menu">
             <p className="eyebrow">SELECT WALLET</p>
             {wallets.length === 0 ? (
-              <p className="wallet-empty">No wallet detected. Install Phantom, Solflare, or Backpack, then refresh the page.</p>
+              <p className="wallet-empty">
+                {invictus.detectionComplete
+                  ? "Wallet extension not detected. Install Invictus Wallet or Phantom, then try again."
+                  : "Looking for installed wallet extensions..."}
+              </p>
             ) : (
               <div>
                 {wallets.map((wallet) => (

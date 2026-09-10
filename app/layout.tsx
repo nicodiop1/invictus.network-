@@ -3,7 +3,6 @@ import { Bodoni_Moda, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./components/providers";
 import { AppHeader } from "./components/app-header";
-import { GridBackground } from "./components/grid-background";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,7 +45,6 @@ export default function RootLayout({
       >
         <Providers>
           <div className="relative min-h-screen bg-background text-foreground">
-            <GridBackground />
             <div className="relative z-10">
               <AppHeader />
               {children}

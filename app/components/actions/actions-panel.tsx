@@ -8,6 +8,8 @@ import { AirdropCard } from "./airdrop-card";
 import { TransferSolCard } from "./transfer-sol-card";
 import { TokenCard } from "./token-card";
 import { MemoCard } from "./memo-card";
+import { ReceiveCard } from "./receive-card";
+import { SwapCard } from "./swap-card";
 
 export function ActionsPanel() {
   const client = useAppClient();
@@ -39,19 +41,22 @@ export function ActionsPanel() {
           }}
         >
           {cluster !== "mainnet" && <AnimatedCard><AirdropCard /></AnimatedCard>}
-          <AnimatedCard><TransferSolCard /></AnimatedCard>
+          <AnimatedCard id="send"><TransferSolCard /></AnimatedCard>
+          <AnimatedCard id="receive"><ReceiveCard /></AnimatedCard>
           <AnimatedCard><MemoCard /></AnimatedCard>
           <AnimatedCard><TokenCard key={cluster} /></AnimatedCard>
+          <AnimatedCard id="swap"><SwapCard /></AnimatedCard>
         </motion.section>
       )}
     </AnimatePresence>
   );
 }
 
-function AnimatedCard({ children }: { children: React.ReactNode }) {
+function AnimatedCard({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
     <motion.div
       className="action-card-shell"
+      id={id}
       variants={{
         hidden: { opacity: 0, y: 12 },
         visible: { opacity: 1, y: 0 },
