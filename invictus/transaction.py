@@ -45,7 +45,7 @@ class Transaction:
     def is_valid(self) -> bool:
         if not isinstance(self.amount, int) or self.amount <= 0 or not isinstance(self.fee, int) or self.fee < 0:
             return False
-        if not isinstance(self.recipient, str) or len(self.recipient) != 45 or not self.recipient.startswith("one1"):
+        if not isinstance(self.recipient, str) or len(self.recipient) != 44 or not self.recipient.startswith("one1"):
             return False
         try:
             int(self.recipient[4:], 16)
