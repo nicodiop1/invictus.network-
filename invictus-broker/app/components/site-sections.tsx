@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { address, formatDecimalFixedPoint, lamportsToSol } from "@solana/kit";
 import { useConnectedWallet } from "@solana/kit-plugin-wallet/react";
 import { toast } from "sonner";
@@ -13,7 +14,7 @@ import { WalletButton } from "./wallet-button";
 const solFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 5 });
 
 export function HeroSection() {
-  return <section className="hero section-wrap" id="top"><div className="hero-copy reveal"><p className="eyebrow">CROWNED BY DESIGN / EST. 2026</p><h1>THE FUTURE<br /><em>IS ONE</em></h1><div className="gold-rule" /><p className="hero-lede">ONE NETWORK. ONE CURRENCY.<br />OPEN TO EVERYONE.</p><div className="button-row"><a className="gold-button" href="#one">BUY ONE</a><a className="outline-button" href="https://explorer.solana.com" target="_blank" rel="noreferrer">CHART ↗</a></div></div><div className="hero-mark reveal reveal-delay"><BrandMark /></div></section>;
+  return <section className="hero section-wrap" id="top"><div className="hero-copy reveal"><p className="eyebrow">CROWNED BY DESIGN / EST. 2026</p><h1>THE FUTURE<br /><em>IS ONE</em></h1><div className="gold-rule" /><p className="hero-lede">ONE NETWORK. ONE CURRENCY.<br />OPEN TO EVERYONE.</p><div className="button-row"><a className="gold-button" href="#one">BUY ONE</a><a className="outline-button" href="https://explorer.solana.com" target="_blank" rel="noreferrer">CHART ↗</a></div></div><div className="hero-mark reveal reveal-delay"><Image className="hero-logo" src="/Invictus One OFFICIAL LOGO.png" alt="Invictus One crowned monogram" width={120} height={120} priority /></div></section>;
 }
 
 export function NetworkSection() {
