@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["ws"],
   turbopack: {
+    root: path.join(__dirname),
     resolveAlias: {
       fs: { browser: "./empty-module.js" },
     },

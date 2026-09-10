@@ -10,6 +10,7 @@ import {
 import type { ClusterMoniker } from "../lib/solana-client";
 import { CLUSTERS } from "../lib/solana-client";
 import { getExplorerUrl } from "../lib/explorer";
+import { publicEnv } from "../lib/config/env";
 
 type ClusterContextValue = {
   cluster: ClusterMoniker;
@@ -22,6 +23,12 @@ const ClusterContext = createContext<ClusterContextValue | null>(null);
 const STORAGE_KEY = "solana-cluster";
 const CLUSTER_EVENT = "cluster-change";
 
+function getDefaultCluster(): ClusterMoniker {
+  return CLUSTERS.includes(publicEnv.defaultCluster as ClusterMoniker)
+    ? (publicEnv.defaultCluster as ClusterMoniker)
+    : "devnet";
+}
+
 function readStoredCluster(): ClusterMoniker {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -31,7 +38,7 @@ function readStoredCluster(): ClusterMoniker {
   } catch {
     // localStorage unavailable (e.g. Safari private mode)
   }
-  return "devnet";
+  return getDefaultCluster();
 }
 
 function getServerCluster(): ClusterMoniker {
