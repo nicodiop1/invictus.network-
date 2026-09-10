@@ -1,44 +1,20 @@
 "use client";
 
-import Image from "next/image";
-import { ThemeToggle } from "./theme-toggle";
-import { ClusterSelect } from "./cluster-select";
+import Link from "next/link";
+import { useState } from "react";
 import { WalletButton } from "./wallet-button";
 
-const navItems = ["NETWORK", "HOW IT WORKS", "ONE", "WALLET", "CONTACT"];
+const navItems = [["NETWORK", "/network"], ["HOW IT WORKS", "/how-it-works"], ["ONE", "/one"], ["WALLET", "/wallet"], ["CONTACT", "/contact"]] as const;
+
+export function BrandMark({ small = false }: { small?: boolean }) {
+  return <span className={`brand-mark${small ? " brand-mark-small" : ""}`} aria-hidden="true"><span className="brand-crown">⌃</span><span className="brand-i">I</span></span>;
+}
 
 export function AppHeader() {
-  return (
-    <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
-      <div className="flex items-center gap-3">
-        <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#d4af5d]/60 bg-[#101010]">
-          <Image
-            src="/logo.png"
-            alt="Invictus One logo"
-            fill
-            sizes="40px"
-            priority
-            className="object-cover"
-          />
-        </div>
-        <span className="brand-wordmark text-lg font-light tracking-[0.32em] text-[#f3d68a] uppercase">
-          Invictus One
-        </span>
-      </div>
-
-      <nav className="nav-item hidden items-center gap-8 text-[10px] font-light tracking-[0.24em] text-[#f6dca3]/80 md:flex">
-        {navItems.map((item) => (
-          <a key={item} href="#" className="transition hover:text-[#f3d68a]">
-            {item}
-          </a>
-        ))}
-      </nav>
-
-      <div className="flex items-center gap-3">
-        <ThemeToggle />
-        <ClusterSelect />
-        <WalletButton />
-      </div>
-    </header>
-  );
+  const [menuOpen, setMenuOpen] = useState(false);
+  return <header className="site-header">
+    <Link className="brand-lockup" href="/" onClick={() => setMenuOpen(false)}><BrandMark /><span className="brand-wordmark">INVICTUS</span><span className="brand-submark">ONE</span></Link>
+    <button className="menu-toggle" type="button" aria-expanded={menuOpen} aria-label={menuOpen ? "Close menu" : "Open menu"} onClick={() => setMenuOpen((open) => !open)}><span /><span /></button>
+    <nav className={`site-nav${menuOpen ? " site-nav-open" : ""}`}>{navItems.map(([label, href]) => <Link key={href} href={href} className="nav-link" onClick={() => setMenuOpen(false)}>{label}</Link>)}<WalletButton /></nav>
+  </header>;
 }
