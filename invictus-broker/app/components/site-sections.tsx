@@ -19,7 +19,7 @@ export function HeroSection() {
 
 export function NetworkSection() {
   const features = [["01", "OPEN BY DEFAULT", "A permissionless network for people building what comes next."], ["02", "ONE CLEAR STANDARD", "Fast, composable infrastructure with the Solana chain underneath."], ["03", "BUILT TO MOVE", "Designed for exchange, ownership, and everyday utility at scale."], ["04", "OWN YOUR ACCESS", "Your wallet is your identity. Your keys stay with you."]];
-  return <section className="content-section section-wrap" id="network"><SectionIntro number="01" title="THE NETWORK" copy="Invictus One is a focused layer for a more open financial internet. One place to connect, move, and participate." /><div className="feature-grid">{features.map(([number, title, copy]) => <article className="feature-card" key={number}><span className="card-number">{number}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>;
+  return <section className="content-section section-wrap watermarked" id="network"><SectionIntro number="01" title="THE NETWORK" copy="Invictus One is a focused layer for a more open financial internet. One place to connect, move, and participate." /><div className="feature-grid">{features.map(([number, title, copy]) => <article className="feature-card" key={number}><span className="card-number">{number}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>;
 }
 
 export function HowItWorksSection() {
@@ -31,7 +31,7 @@ export function OneSection() {
   const [copied, setCopied] = useState(false);
   const contract = "ONE111111111111111111111111111111111111111";
   const copyContract = async () => { await navigator.clipboard.writeText(contract); setCopied(true); toast.success("Contract address copied"); setTimeout(() => setCopied(false), 1800); };
-  return <section className="content-section token-section section-wrap" id="one"><SectionIntro number="03" title="ONE" copy="A single symbol for shared momentum. Built on Solana, designed for a world that moves together." /><div className="token-grid"><div className="coin-visual"><div className="coin-orbit" /><div className="coin-face"><BrandMark small /><span>ONE</span></div></div><div className="token-data"><div className="data-row"><span>SUPPLY</span><strong>1,000,000,000 ONE</strong></div><div className="data-row"><span>CHAIN</span><strong>SOLANA</strong></div><div className="data-row"><span>CONTRACT</span><button className="contract-button" type="button" onClick={copyContract}>{copied ? "COPIED" : ellipsify(contract, 8)} <span>⧉</span></button></div></div></div></section>;
+  return <section className="content-section token-section section-wrap watermarked" id="one"><SectionIntro number="03" title="ONE" copy="A single symbol for shared momentum. Built on Solana, designed for a world that moves together." /><div className="token-grid"><div className="coin-visual"><div className="coin-orbit" /><Image className="coin-image" src="/Invictus One Coin.png" alt="Invictus One coin" width={330} height={330} /></div><div className="token-data"><div className="data-row"><span>SUPPLY</span><strong>1,000,000,000 ONE</strong></div><div className="data-row"><span>CHAIN</span><strong>SOLANA</strong></div><div className="data-row"><span>CONTRACT</span><button className="contract-button" type="button" onClick={copyContract}>{copied ? "COPIED" : ellipsify(contract, 8)} <span>⧉</span></button></div></div></div></section>;
 }
 
 export function WalletSection() {
@@ -48,7 +48,7 @@ export function ContactSection() {
 }
 
 function SectionIntro({ number, title, copy }: { number: string; title: string; copy: string }) {
-  return <div className="section-intro reveal"><span className="section-number">{number}</span><div><p className="eyebrow">INVEST IN THE OPEN</p><h2>{title}</h2><p className="section-copy">{copy}</p></div></div>;
+  return <div className="section-intro reveal"><span className="section-number">{number}</span><div><p className="eyebrow">INVEST IN THE OPEN</p><h2>{title}</h2><div className="section-rule" /><p className="section-copy">{copy}</p></div></div>;
 }
 
 export function SiteFooter() {
