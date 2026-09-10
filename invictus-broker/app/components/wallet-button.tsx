@@ -11,6 +11,7 @@ import {
 } from "@solana/kit-plugin-wallet/react";
 import { toast } from "sonner";
 import { useBalance } from "../lib/hooks/use-balance";
+import { useInvictusWallet } from "../lib/hooks/use-invictus-wallet";
 import { ellipsify } from "../lib/explorer";
 import { useAppClient } from "../lib/client-provider";
 
@@ -25,14 +26,16 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const connected = useConnectedWallet(client);
   const { dispatch: connect, error } = useConnect(client);
   const { dispatch: disconnect } = useDisconnect(client);
+  const invictus = useInvictusWallet();
 
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const wasConnected = useRef(false);
 
   const walletAddress = connected?.account.address;
+  const activeAddress = invictus.publicKey ?? walletAddress;
   const balance = useBalance(
-    walletAddress ? address(walletAddress) : undefined
+    activeAddress ? address(activeAddress) : undefined
   );
 
   const close = () => setIsOpen(false);
@@ -69,6 +72,43 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleInvictusConnect = async () => {
+    try {
+      await invictus.connect();
+      toast.success("Invictus Wallet connected", { id: "wallet-state" });
+    } catch (connectError) {
+      toast.error(connectError instanceof Error ? connectError.message : String(connectError), { id: "wallet-state" });
+    }
+  };
+
+  if (invictus.detected) {
+    if (invictus.publicKey) {
+      return (
+        <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
+          <button className="wallet-connected" type="button" onClick={invictus.disconnect}>
+            <span className="status-dot" />
+            <span>{ellipsify(invictus.publicKey, 4)}</span>
+            <span className="wallet-balance" aria-hidden="true">{balance.lamports == null ? "—" : formatDecimalFixedPoint(solFormatter, lamportsToSol(balance.lamports))} SOL</span>
+          </button>
+        </div>
+      );
+    }
+
+    const label = !invictus.exists
+      ? "Create wallet in extension"
+      : invictus.locked
+        ? "Unlock Invictus Wallet"
+        : "Connect Invictus Wallet";
+
+    return (
+      <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
+        <button className="gold-button wallet-trigger" type="button" onClick={handleInvictusConnect}>
+          {label}
+        </button>
+      </div>
+    );
+  }
+
   if (!connected) {
     return (
       <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
@@ -76,7 +116,11 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
           onClick={() => setIsOpen((value) => !value)}
           className="gold-button wallet-trigger"
         >
-            {status === "connecting" ? "Connecting..." : "Connect Wallet"}
+            {status === "connecting"
+              ? "Connecting..."
+              : wallets.length === 0
+                ? "Install Invictus Wallet"
+                : "Connect Wallet"}
         </button>
 
         {isOpen && (
