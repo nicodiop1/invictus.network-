@@ -29,6 +29,7 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const invictus = useInvictusWallet();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [showMobilePanel, setShowMobilePanel] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const wasConnected = useRef(false);
 
@@ -80,6 +81,43 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
       toast.error(connectError instanceof Error ? connectError.message : String(connectError), { id: "wallet-state" });
     }
   };
+
+  const handleMobileConnect = () => {
+    setShowMobilePanel(false);
+    invictus.openMobileWallet();
+  };
+
+  if (invictus.mobile && !invictus.publicKey) {
+    return (
+      <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
+        <button
+          className="gold-button wallet-trigger"
+          type="button"
+          onClick={() => setShowMobilePanel((open) => !open)}
+        >
+          Connect Invictus Wallet
+        </button>
+        {showMobilePanel && (
+          <div className="wallet-menu mobile-wallet-menu">
+            <p className="eyebrow">INVICTUS WALLET</p>
+            <h2 className="mobile-wallet-title">Your keys stay with you.</h2>
+            <p className="wallet-empty">
+              Approve the connection in Invictus Wallet, then return here with your public address.
+            </p>
+            <button className="gold-button wallet-trigger" type="button" onClick={handleMobileConnect}>
+              Open Invictus Wallet
+            </button>
+            <a className="text-button mobile-wallet-install" href="https://wallet.invictus.one" target="_blank" rel="noreferrer">
+              Install Invictus Wallet
+            </a>
+            <button className="text-button mobile-wallet-cancel" type="button" onClick={() => setShowMobilePanel(false)}>
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (invictus.detected) {
     if (invictus.publicKey) {

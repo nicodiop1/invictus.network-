@@ -78,6 +78,10 @@ button { font: inherit; }
 .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #63c78a; margin-right: 7px; }
 .wallet-menu { position: absolute; right: 0; top: calc(100% + 10px); width: 270px; background: #12110d; border: 1px solid var(--line); border-radius: 2px; padding: 18px; z-index: 30; }
 .wallet-menu .eyebrow { margin: 0 0 15px; }
+.mobile-wallet-menu { display: grid; gap: 14px; padding: 22px; }
+.mobile-wallet-title { color: var(--paper); font-family: var(--display); font-size: 24px; font-weight: 400; letter-spacing: .04em; margin: 0; }
+.mobile-wallet-install, .mobile-wallet-cancel { display: block; text-align: center; }
+.mobile-wallet-cancel { color: var(--muted); }
 .wallet-empty { color: var(--muted); font-size: 12px; line-height: 1.6; }
 .wallet-option { display: flex; width: 100%; align-items: center; gap: 10px; color: var(--paper); background: transparent; border: 0; padding: 12px 0; cursor: pointer; text-align: left; font-size: 12px; }
 .wallet-option:hover { color: var(--gold-light); }

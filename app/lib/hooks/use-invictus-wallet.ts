@@ -25,12 +25,14 @@ declare global {
 
 type InvictusWalletState = InvictusStatus & {
   detected: boolean;
+  mobile: boolean;
 };
 
 const INITIAL_STATE: InvictusWalletState = {
   detected: false,
   exists: false,
   locked: false,
+  mobile: false,
   publicKey: null,
 };
 
@@ -47,7 +49,7 @@ export function useInvictusWallet() {
 
     try {
       const status = await wallet.status();
-      if (mounted.current) setState({ detected: true, ...status });
+      if (mounted.current) setState((current) => ({ ...current, detected: true, ...status }));
     } catch {
       if (mounted.current) setState((current) => ({ ...current, detected: true }));
     }
@@ -55,6 +57,9 @@ export function useInvictusWallet() {
 
   useEffect(() => {
     mounted.current = true;
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobile = /android|iphone|ipad|ipod|mobile/.test(userAgent);
+    setState((current) => ({ ...current, mobile }));
     const handleInitialized = () => void readStatus();
     window.addEventListener("invictus#initialized", handleInitialized);
 
@@ -78,9 +83,21 @@ export function useInvictusWallet() {
     if (!wallet) throw new Error("Invictus Wallet is not detected");
     const result = await wallet.connect();
     if (mounted.current) {
-      setState({ detected: true, exists: true, locked: false, publicKey: result.publicKey });
+      setState((current) => ({ ...current, detected: true, exists: true, locked: false, publicKey: result.publicKey }));
     }
     return result.publicKey;
+  }, []);
+
+  const openMobileWallet = useCallback(() => {
+    const returnUrl = `${window.location.origin}/wallet`;
+    const requestUrl = `${returnUrl}?invictus=connect`;
+    const deepLink = `invictuswallet://connect?return_url=${encodeURIComponent(requestUrl)}`;
+    const universalLink = `https://wallet.invictus.one/connect?return_url=${encodeURIComponent(requestUrl)}`;
+
+    window.location.href = deepLink;
+    window.setTimeout(() => {
+      if (document.visibilityState === "visible") window.location.href = universalLink;
+    }, 900);
   }, []);
 
   const disconnect = useCallback(() => {
@@ -92,5 +109,6 @@ export function useInvictusWallet() {
     status: state.publicKey ? "connected" : state.locked ? "locked" : state.detected ? "disconnected" : "undetected",
     connect,
     disconnect,
+    openMobileWallet,
   } as const;
 }
