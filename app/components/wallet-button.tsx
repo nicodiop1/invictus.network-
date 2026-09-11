@@ -1,45 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { address, formatDecimalFixedPoint, lamportsToSol } from "@solana/kit";
 import {
-  useWallets,
+  useConnectedWallet,
   useConnect,
   useDisconnect,
-  useConnectedWallet,
+  useIsWalletReady,
   useWalletStatus,
+  useWallets,
 } from "@solana/kit-plugin-wallet/react";
 import { toast } from "sonner";
-import { useBalance } from "../lib/hooks/use-balance";
-import { useInvictusWallet } from "../lib/hooks/use-invictus-wallet";
-import { ellipsify } from "../lib/explorer";
 import { useAppClient } from "../lib/client-provider";
+import { ellipsify } from "../lib/explorer";
+import { useBalance } from "../lib/hooks/use-balance";
+import { useTokenBalance } from "../lib/hooks/use-token-balance";
 
-const solFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 5,
-});
+const solFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 5 });
+const subscribeToViewport = () => () => {};
+const getMobileSnapshot = () => /android|iphone|ipad|ipod|mobile/.test(navigator.userAgent.toLowerCase());
+const getMobileServerSnapshot = () => false;
 
 export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const client = useAppClient();
   const wallets = useWallets(client);
   const status = useWalletStatus(client);
+  const ready = useIsWalletReady(client);
   const connected = useConnectedWallet(client);
-  const { dispatch: connect, error } = useConnect(client);
+  const { dispatch: connect, error: connectError } = useConnect(client);
   const { dispatch: disconnect } = useDisconnect(client);
-  const invictus = useInvictusWallet();
-
   const [isOpen, setIsOpen] = useState(false);
-  const [showMobilePanel, setShowMobilePanel] = useState(false);
+  const isMobile = useSyncExternalStore(subscribeToViewport, getMobileSnapshot, getMobileServerSnapshot);
   const ref = useRef<HTMLDivElement>(null);
   const wasConnected = useRef(false);
-
   const walletAddress = connected?.account.address;
-  const activeAddress = invictus.publicKey ?? walletAddress;
-  const balance = useBalance(
-    activeAddress ? address(activeAddress) : undefined
-  );
-
-  const close = () => setIsOpen(false);
+  const balance = useBalance(walletAddress ? address(walletAddress) : undefined);
+  const oneBalance = useTokenBalance(walletAddress);
 
   useEffect(() => {
     if (status === "connecting") toast.loading("Connecting wallet...", { id: "wallet-state" });
@@ -54,148 +50,76 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
   }, [status]);
 
   useEffect(() => {
-    if (error != null) toast.error(error instanceof Error ? error.message : String(error), { id: "wallet-state" });
-  }, [error]);
-
-  useEffect(() => {
-    if (balance.error != null) {
-      toast.error("Unable to load wallet balance", { id: "wallet-balance-state" });
+    if (connectError != null) {
+      console.error("Wallet connection failed", connectError);
+      toast.error("Connection failed. Approve the request in your wallet or try again.", { id: "wallet-state" });
     }
-  }, [balance.error]);
+  }, [connectError]);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        close();
-      }
+    if (balance.error != null || oneBalance.error != null) {
+      console.error("Wallet balance refresh failed", balance.error ?? oneBalance.error);
+      toast.error("RPC unavailable. Balances will retry shortly.", { id: "wallet-balance-state" });
+    }
+  }, [balance.error, oneBalance.error]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) setIsOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleInvictusConnect = async () => {
-    try {
-      await invictus.connect();
-      toast.success("Invictus Wallet connected", { id: "wallet-state" });
-    } catch (connectError) {
-      toast.error(connectError instanceof Error ? connectError.message : String(connectError), { id: "wallet-state" });
-    }
+  const openPhantom = () => {
+    const returnUrl = window.location.href;
+    window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(returnUrl)}?ref=${encodeURIComponent(window.location.origin)}`;
   };
-
-  const handleMobileConnect = () => {
-    setShowMobilePanel(false);
-    invictus.openMobileWallet();
-  };
-
-  if (invictus.mobile && !invictus.publicKey) {
-    return (
-      <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
-        <button
-          className="gold-button wallet-trigger"
-          type="button"
-          onClick={() => setShowMobilePanel((open) => !open)}
-        >
-          Connect Invictus Wallet
-        </button>
-        {showMobilePanel && (
-          <div className="wallet-menu mobile-wallet-menu">
-            <p className="eyebrow">INVICTUS WALLET</p>
-            <h2 className="mobile-wallet-title">Your keys stay with you.</h2>
-            <p className="wallet-empty">
-              Approve the connection in Invictus Wallet, then return here with your public address.
-            </p>
-            <button className="gold-button wallet-trigger" type="button" onClick={handleMobileConnect}>
-              Open Invictus Wallet
-            </button>
-            <a className="text-button mobile-wallet-install" href="https://wallet.invictus.one" target="_blank" rel="noreferrer">
-              Install Invictus Wallet
-            </a>
-            <button className="text-button mobile-wallet-cancel" type="button" onClick={() => setShowMobilePanel(false)}>
-              Cancel
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (invictus.detected) {
-    if (invictus.publicKey) {
-      return (
-        <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
-          <button className="wallet-connected" type="button" onClick={invictus.disconnect}>
-            <span className="status-dot" />
-            <span>{ellipsify(invictus.publicKey, 4)}</span>
-            <span className="wallet-balance" aria-hidden="true">{balance.lamports == null ? "—" : formatDecimalFixedPoint(solFormatter, lamportsToSol(balance.lamports))} SOL</span>
-          </button>
-        </div>
-      );
-    }
-
-    const label = !invictus.exists
-      ? "Create wallet in extension"
-      : invictus.locked
-        ? "Unlock Invictus Wallet"
-        : "Connect Invictus Wallet";
-
-    return (
-      <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
-        <button className="gold-button wallet-trigger" type="button" onClick={handleInvictusConnect}>
-          {label}
-        </button>
-      </div>
-    );
-  }
 
   if (!connected) {
     return (
       <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
         <button
+          type="button"
           onClick={() => setIsOpen((value) => !value)}
           className="gold-button wallet-trigger"
+          disabled={status === "connecting" || status === "reconnecting"}
         >
-            {status === "connecting"
-              ? "Connecting..."
-              : "Connect Wallet"}
+          {status === "connecting" || status === "reconnecting" ? "Connecting..." : "Connect Wallet"}
         </button>
-
         {isOpen && (
           <div className="wallet-menu">
             <p className="eyebrow">SELECT WALLET</p>
-            {wallets.length === 0 ? (
-              <p className="wallet-empty">
-                {invictus.detectionComplete
-                  ? "Wallet extension not detected. Install Invictus Wallet or Phantom, then try again."
-                  : "Looking for installed wallet extensions..."}
-              </p>
-            ) : (
+            {wallets.length > 0 ? (
               <div>
                 {wallets.map((wallet) => (
                   <button
                     key={wallet.name}
-                    onClick={() => {
-                      connect(wallet);
-                      close();
-                    }}
-                    disabled={status === "connecting"}
+                    type="button"
+                    onClick={() => { void connect(wallet); setIsOpen(false); }}
+                    disabled={status === "connecting" || status === "reconnecting"}
                     className="wallet-option"
                   >
                     {wallet.icon && (
-                      // eslint-disable-next-line @next/next/no-img-element -- wallet-standard icons are data URIs
-                      <img
-                        src={wallet.icon}
-                        alt=""
-                        className="wallet-icon-image"
-                      />
+                      // eslint-disable-next-line @next/next/no-img-element -- Wallet Standard icons may be data URIs.
+                      <img src={wallet.icon} alt="" className="wallet-icon-image" />
                     )}
                     <span>{wallet.name}</span>
                   </button>
                 ))}
               </div>
+            ) : (
+              <p className="wallet-empty">
+                {!ready ? "Looking for installed wallet extensions..." : isMobile ? "No wallet is available in this browser. Open this page in Phantom to connect." : "Wallet extension not detected. Install Phantom or another Solana wallet, then try again."}
+              </p>
             )}
-            {status === "connecting" && (
-                <p className="wallet-empty">Connecting...</p>
+            {isMobile && wallets.length === 0 && ready && (
+              <>
+                <button type="button" className="gold-button wallet-trigger" onClick={openPhantom}>OPEN IN PHANTOM</button>
+                <a className="text-button mobile-wallet-install" href="https://phantom.app/download" target="_blank" rel="noreferrer">GET PHANTOM</a>
+              </>
             )}
+            {(status === "connecting" || status === "reconnecting") && <p className="wallet-empty">Approve the connection in your wallet...</p>}
           </div>
         )}
       </div>
@@ -204,27 +128,18 @@ export function WalletButton({ fullWidth = false }: { fullWidth?: boolean }) {
 
   return (
     <div className={`wallet-control${fullWidth ? " wallet-control-full" : ""}`} ref={ref}>
-      <button
-        onClick={() => setIsOpen((value) => !value)}
-        className="wallet-connected"
-      >
+      <button type="button" onClick={() => setIsOpen((value) => !value)} className="wallet-connected">
         <span className="status-dot" />
-        <span>{ellipsify(walletAddress!, 4)}</span>
+        <span>{ellipsify(connected.account.address, 4)}</span>
         <span className="wallet-balance" aria-hidden="true">{balance.lamports == null ? "—" : formatDecimalFixedPoint(solFormatter, lamportsToSol(balance.lamports))} SOL</span>
       </button>
-
       {isOpen && (
         <div className="wallet-menu wallet-details">
           <p className="eyebrow">CONNECTED WALLET</p>
           <p className="wallet-address">{walletAddress}</p>
-          <div className="wallet-stat"><span>Balance</span><strong>
-                {balance.lamports != null
-                  ? formatDecimalFixedPoint(
-                      solFormatter,
-                      lamportsToSol(balance.lamports)
-                    )
-                  : "—"}{" "}SOL</strong></div>
-          <button className="text-button" onClick={() => { disconnect(); close(); }}>DISCONNECT</button>
+          <div className="wallet-stat"><span>Balance</span><strong>{balance.lamports == null ? "—" : formatDecimalFixedPoint(solFormatter, lamportsToSol(balance.lamports))} SOL</strong></div>
+          <div className="wallet-stat"><span>ONE</span><strong>{oneBalance.isLoading ? "..." : oneBalance.balance?.uiAmountString ?? "0"}</strong></div>
+          <button type="button" className="text-button" onClick={() => { void disconnect(); setIsOpen(false); }}>DISCONNECT</button>
         </div>
       )}
     </div>

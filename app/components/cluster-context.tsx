@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { ClusterMoniker } from "../lib/solana-client";
 import { CLUSTERS } from "../lib/solana-client";
+import { publicEnv } from "../lib/config/env";
 import { getExplorerUrl } from "../lib/explorer";
 
 type ClusterContextValue = {
@@ -31,11 +32,17 @@ function readStoredCluster(): ClusterMoniker {
   } catch {
     // localStorage unavailable (e.g. Safari private mode)
   }
-  return "devnet";
+  return getConfiguredCluster();
 }
 
 function getServerCluster(): ClusterMoniker {
-  return "devnet";
+  return getConfiguredCluster();
+}
+
+function getConfiguredCluster(): ClusterMoniker {
+  return CLUSTERS.includes(publicEnv.defaultCluster as ClusterMoniker)
+    ? (publicEnv.defaultCluster as ClusterMoniker)
+    : "devnet";
 }
 
 function subscribeCluster(callback: () => void) {

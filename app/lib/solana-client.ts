@@ -50,7 +50,8 @@ export function getClusterUrl(cluster: ClusterMoniker) {
 }
 
 export function getConfiguredCluster(): ClusterMoniker {
-  return ENV_NETWORKS[process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet"] ?? "devnet";
+  const configured = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? process.env.NEXT_PUBLIC_DEFAULT_CLUSTER ?? "devnet";
+  return ENV_NETWORKS[configured] ?? "devnet";
 }
 
 export function getWalletChain(cluster: ClusterMoniker) {
